@@ -164,6 +164,66 @@ int BasicWriter::init(TChain* tchain, TString out) {
     return 0;
 }
 
+void  BasicReader::init(edm::Event& iEvent){
+    edm::Handle< std::vector<float> > genParts_pt,genParts_eta,genParts_phi,genParts_vx, genParts_vy, genParts_vz;
+    edm::Handle< std::vector<int> >genParts_charge;
+    edm::Handle< std::vector<float> > TTStubs_x,TTStubs_y,TTStubs_z,TTStubs_r, TTStubs_eta, TTStubs_phi,TTStubs_coordx, TTStubs_coordy, TTStubs_trigBend, TTStubs_roughPt;
+    edm::Handle< std::vector<unsigned> >TTStubs_clusWidth0, TTStubs_clusWidth1,TTStubs_modId;
+    edm::Handle< std::vector<int> >TTStubs_tpId ;
+    iEvent.getByLabel("ntupleGenParticles","genParts@pt", genParts_pt);
+    iEvent.getByLabel("ntupleGenParticles","genParts@eta", genParts_eta);
+    iEvent.getByLabel("ntupleGenParticles","genParts@phi", genParts_phi);
+    iEvent.getByLabel("ntupleGenParticles","genParts@vx", genParts_vx);
+    iEvent.getByLabel("ntupleGenParticles","genParts@vy", genParts_vy);
+    iEvent.getByLabel("ntupleGenParticles","genParts@vz", genParts_vz);
+    iEvent.getByLabel("ntupleGenParticles","genParts@charge", genParts_charge);
+
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@x", TTStubs_x);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@y", TTStubs_y);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@z", TTStubs_z);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@r", TTStubs_r);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@eta", TTStubs_eta);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@phi", TTStubs_phi);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@coordx", TTStubs_coordx);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@coordy", TTStubs_coordy);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@trigBend", TTStubs_trigBend);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@roughPt", TTStubs_roughPt);
+    
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@clusWidth0", TTStubs_clusWidth0);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@clusWidth1", TTStubs_clusWidth1);
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@modId", TTStubs_modId);
+    
+    iEvent.getByLabel("ntupleTTStubs","TTStubs@tpId", TTStubs_tpId);
+ 
+   for(unsigned int g=0; g<genParts_pt->size();++g){
+        vp_pt->push_back(genParts_pt->at(g));
+        vp_eta->push_back(genParts_eta->at(g));
+        vp_phi->push_back(genParts_phi->at(g));
+        vp_vx->push_back(genParts_vx->at(g));
+        vp_vy->push_back(genParts_vy->at(g));
+        vp_vz->push_back(genParts_vz->at(g));
+        vp_charge->push_back(genParts_charge->at(g));
+        
+    }
+
+    for(unsigned int s=0; s<TTStubs_eta->size();++s){
+        vb_x->push_back(TTStubs_x->at(s));
+        vb_y->push_back(TTStubs_y->at(s));
+        vb_z->push_back(TTStubs_z->at(s));
+        vb_r->push_back(TTStubs_r->at(s));
+        vb_eta->push_back(TTStubs_eta->at(s));
+        vb_phi->push_back(TTStubs_phi->at(s));
+        vb_coordx->push_back(TTStubs_coordx->at(s));
+        vb_coordy->push_back(TTStubs_coordy->at(s));
+        vb_trigBend->push_back(TTStubs_trigBend->at(s));
+        vb_roughPt->push_back(TTStubs_roughPt->at(s));
+        vb_clusWidth0->push_back(TTStubs_clusWidth0->at(s));
+        vb_clusWidth1->push_back(TTStubs_clusWidth1->at(s));
+        vb_modId->push_back(TTStubs_modId->at(s));
+        vb_tpId->push_back(TTStubs_tpId->at(s));
+    }
+}
+
 Long64_t BasicWriter::writeTree() {
     Long64_t nentries = ttree->GetEntries();
     tfile->Write();

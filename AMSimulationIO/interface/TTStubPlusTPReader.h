@@ -13,7 +13,7 @@ class TTStubPlusTPReader : public BasicReader {
     ~TTStubPlusTPReader();
 
     int init(TString src, bool full=true);
-
+    void init(edm::Event& iEvent);
     void nullParticles(const std::vector<bool>& nulling, bool full=true);
 
     // trkParticle information
@@ -38,7 +38,7 @@ class TTStubPlusTPWriter : public BasicWriter {
     ~TTStubPlusTPWriter();
 
     int init(TChain* tchain, TString out);
-
+    void init(edm::Event& iEvent);
     void fill();
 };
 

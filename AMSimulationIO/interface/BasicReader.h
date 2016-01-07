@@ -10,7 +10,7 @@
 #include <cassert>
 #include <memory>
 #include <vector>
-
+#include "FWCore/Framework/interface/Event.h"
 namespace slhcl1tt {
 
 
@@ -21,7 +21,7 @@ class BasicReader {
     ~BasicReader();
 
     int init(TString src, bool full=true);
-
+    void init(edm::Event& iEvent);
     template <typename T>
     void nullVectorElements(std::vector<T>* v, const std::vector<bool>& nulling);
 
