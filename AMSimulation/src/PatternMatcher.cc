@@ -162,6 +162,15 @@ int PatternMatcher::makeRoads(TString src, TString out) {
 
         std::vector<bool> stubsNotInTower;  // true: not in this trigger tower
         std::vector<bool> stubsInOverlapping(nstubs,false);  // true: stub is in overlapping region and has TO BE removed
+        StubFiltering(reader,stubsNotInTower,stubsInOverlapping);
+        // _____________________________________________________________________
+        //         // Start pattern recognition
+        PatternMatching(reader,stubsNotInTower,stubsInOverlapping);
+        //                         
+        //This is the associative memory to road builder
+        //
+        roads=RoadBuilding(false);
+/*
         for (unsigned istub=0; istub<nstubs; ++istub) {
         	unsigned moduleId = reader.vb_modId   ->at(istub);
 
@@ -310,14 +319,14 @@ int PatternMatcher::makeRoads(TString src, TString out) {
                 }
             }
 
+	
             roads.push_back(aroad);  // save aroad
-
             if (verbose_>2)  std::cout << Debug() << "... ... road: " << roads.size() - 1 << " " << aroad << std::endl;
 
             if (roads.size() >= (unsigned) po_.maxRoads)
                 break;
         }
-
+*/
         if (! roads.empty())
             ++nKept;
 
