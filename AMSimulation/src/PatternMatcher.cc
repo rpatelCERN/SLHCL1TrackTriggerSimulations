@@ -338,7 +338,180 @@ int PatternMatcher::makeRoads(TString src, TString out) {
     return 0;
 }
 
+std::vector<TTRoad> PatternMatcher::makeRoads(edm::Event& iEvent) {
+    const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
+    TTStubPlusTPReader reader(verbose_);
+    reader.init(iEvent);
+    const unsigned nss = arbiter_ -> nsuperstripsPerLayer();
+    std::vector<bool> stubsNotInTower;
+    const unsigned nstubs = reader.vb_modId->size();
+    std::vector<bool> stubsInOverlapping(nstubs,false);  // true: stub is in overlapping region and has TO BE removed
 
+    StubFiltering(reader,stubsNotInTower,stubsInOverlapping);
+    PatternMatching(reader,stubsNotInTower,stubsInOverlapping);
+    //TTRoadWriter dummy(verbose_);
+    std::vector<TTRoad> roads_=RoadBuilding(true);
+    //std::vector<TTRoad> roads_;
+    return roads_;
+ }
+
+void PatternMatcher::StubFiltering(TTStubPlusTPReader &reader,std::vector<bool> &stubsNotInTower, std::vector<bool> &stubsInOverlapping){
+    const std::map<unsigned, bool>& ttrmap = ttmap_ -> getTriggerTowerReverseMap(po_.tower);
+    const unsigned nstubs = reader.vb_modId->size();
+        if (nstubs > 500000) {
+            std::cout << Error() << "Way too many stubs: " << nstubs << std::endl;
+            return;
+        } 
+        for (unsigned istub=0; istub<nstubs; ++istub) {
+        	unsigned moduleId = reader.vb_modId   ->at(istub);
+
+        	// Skip if not in this trigger tower
+        	bool isNotInTower = (ttrmap.find(moduleId) == ttrmap.end());
+        	stubsNotInTower.push_back(isNotInTower);
+          if (removeOverlap_) {
+        	float    stub_coordx = reader.vb_coordx->at(istub);
+        	float    stub_coordy = reader.vb_coordy->at(istub);
+        	std::map<unsigned,ModuleOverlap>::iterator it_mo = momap_->moduleOverlap_map_.find(moduleId);
+        	if (it_mo != momap_->moduleOverlap_map_.end()) {
+        		float minx = it_mo->second.x1;
+        		if (stub_coordx < minx) {
+        			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << "\t" << moduleId << "\t x1: " <<  stub_coordx << std::endl;
+        			stubsInOverlapping.at(istub)=true;
+        			continue;
+        		}
+        		float maxx = it_mo->second.x2;
+        		if (stub_coordx > maxx) {
+        			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << "\t"  << moduleId << "\t x2: " <<  stub_coordx << std::endl;
+        			stubsInOverlapping.at(istub)=true;
+        			continue;
+        		}
+        		float miny = it_mo->second.y1;
+        		if (stub_coordy < miny) {
+        			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << "\t"  << moduleId << "\t y1: " <<  stub_coordy << std::endl;
+        			stubsInOverlapping.at(istub)=true;
+        			continue;
+        		}
+        		float maxy = it_mo->second.y2;
+        		if (stub_coordy > maxy) {
+        			if (verbose_>2)  std::cout << Info() << "Removing stub in module " << "\t"  << moduleId << "\t y2: " <<  stub_coordy << std::endl;
+        			stubsInOverlapping.at(istub)=true;
+        			continue;
+        		}
+        	}
+        }
+        } // endif removeOverlap_
+        // Null stub information for those that are not in this trigger tower
+        reader.nullStubs(stubsNotInTower);
+        // _____________________________________________________________________
+        // Skip tracking particles
+
+        std::vector<bool> trkPartsNotPrimary;  // true: not primary
+
+        const unsigned nparts = reader.vp2_primary->size();
+        for (unsigned ipart=0; ipart<nparts; ++ipart) {
+
+            // Skip if not primary
+            bool  primary         = reader.vp2_primary->at(ipart);
+            int   simCharge       = reader.vp2_charge->at(ipart);
+            trkPartsNotPrimary.push_back(!(simCharge!=0 && primary));
+        }
+
+        // Null trkPart information for those that are not primary
+        reader.nullParticles(trkPartsNotPrimary);
+
+}
+
+void PatternMatcher::PatternMatching(TTStubPlusTPReader &reader, std::vector<bool> stubsNotInTower,  std::vector<bool> &stubsInOverlapping){
+        // _____________________________________________________________________
+        // Start pattern recognition
+        hitBuffer_.reset();
+    const unsigned nstubs = reader.vb_modId->size();
+    const unsigned nss = arbiter_ -> nsuperstripsPerLayer();
+        // Loop over reconstructed stubs
+        for (unsigned istub=0; istub<nstubs; ++istub) {
+            bool isNotInTower = stubsNotInTower.at(istub);
+            if (isNotInTower)
+                continue;
+            if ((removeOverlap_) && stubsInOverlapping.at(istub))
+                continue;
+
+            unsigned moduleId = reader.vb_modId   ->at(istub);
+            float    strip    = reader.vb_coordx  ->at(istub);  // in full-strip unit
+            float    segment  = reader.vb_coordy  ->at(istub);  // in full-strip unit
+
+            float    stub_r   = reader.vb_r       ->at(istub);
+            float    stub_phi = reader.vb_phi     ->at(istub);
+            float    stub_z   = reader.vb_z       ->at(istub);
+            float    stub_ds  = reader.vb_trigBend->at(istub);  // in full-strip unit
+
+            // Find superstrip ID
+            unsigned ssId = 0;
+            if (!arbiter_ -> useGlobalCoord()) {  // local coordinates
+                ssId = arbiter_ -> superstripLocal(moduleId, strip, segment);
+
+            } else {                              // global coordinates
+                ssId = arbiter_ -> superstripGlobal(moduleId, stub_r, stub_phi, stub_z, stub_ds);
+            }
+
+            unsigned lay16    = compressLayer(decodeLayer(moduleId));
+            unsigned ssIdHash = simpleHash(lay16, nss, ssId);
+
+            // Push into hit buffer
+            hitBuffer_.insert(ssIdHash, istub);
+
+            if (verbose_>2) {
+                std::cout << Debug() << "... ... stub: " << istub << " moduleId: " << moduleId << " strip: " << strip << " segment: " << segment << " r: " << stub_r << " phi: " << stub_phi << " z: " << stub_z << " ds: " << stub_ds << std::endl;
+                std::cout << Debug() << "... ... stub: " << istub << " ssId: " << ssId << " ssIdHash: " << ssIdHash << std::endl;
+            }
+        }
+
+        hitBuffer_.freeze(po_.maxStubs);
+}
+
+std::vector<TTRoad> PatternMatcher::RoadBuilding(bool CMSSW){
+        // _____________________________________________________________________
+        // Perform associative memory lookup
+        const std::vector<unsigned>& firedPatterns = associativeMemory_.lookup(hitBuffer_, po_.nLayers, po_.maxMisses);
+	std::vector<TTRoad> roads;
+    const unsigned nss = arbiter_ -> nsuperstripsPerLayer();
+        for (std::vector<unsigned>::const_iterator it = firedPatterns.begin(); it != firedPatterns.end(); ++it) {
+            // Create and set TTRoad
+            TTRoad aroad;
+            aroad.patternRef   = (*it);
+            aroad.tower        = po_.tower;
+            aroad.nstubs       = 0;
+            aroad.patternInvPt = 0.;
+
+            // Retrieve the superstripIds and other attributes
+            pattern_type pattHash;
+            associativeMemory_.retrieve(aroad.patternRef, pattHash, aroad.patternInvPt);
+
+            aroad.superstripIds.clear();
+            aroad.stubRefs.clear();
+
+            aroad.superstripIds.resize(po_.nLayers);
+            aroad.stubRefs.resize(po_.nLayers);
+
+            for (unsigned layer=0; layer<po_.nLayers; ++layer) {
+                const unsigned ssIdHash = pattHash.at(layer);
+                const unsigned ssId     = simpleHashUndo(layer, nss, ssIdHash);
+
+                if (hitBuffer_.isHit(ssIdHash)) {
+                    const std::vector<unsigned>& stubRefs = hitBuffer_.getHits(ssIdHash);
+                    aroad.superstripIds.at(layer) = ssId;
+                    aroad.stubRefs     .at(layer) = stubRefs;
+                    aroad.nstubs                 += stubRefs.size();
+
+                } else {
+                    aroad.superstripIds.at(layer) = ssId;
+                }
+            }
+
+            roads.push_back(aroad);  // save aroad
+	}
+	return roads;
+
+}
 // _____________________________________________________________________________
 // Main driver
 int PatternMatcher::run() {

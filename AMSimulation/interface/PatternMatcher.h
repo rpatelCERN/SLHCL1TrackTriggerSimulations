@@ -1,6 +1,6 @@
 #ifndef AMSimulation_PatternMatcher_h_
 #define AMSimulation_PatternMatcher_h_
-
+#include "FWCore/Framework/interface/Event.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/Pattern.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
@@ -9,6 +9,9 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/AssociativeMemory.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/HitBuffer.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ModuleOverlapMap.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTStubPlusTPReader.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationIO/interface/TTRoadReader.h"
+
 using namespace slhcl1tt;
 
 
@@ -51,7 +54,10 @@ class PatternMatcher {
 
     // Do pattern recognition, write roads (patterns that fired)
     int makeRoads(TString src, TString out);
-
+    void StubFiltering(TTStubPlusTPReader &reader, std::vector<bool>&stubsNotInTower, std::vector<bool> &stubsInOverlapping);
+    void PatternMatching(TTStubPlusTPReader &reader, std::vector<bool> stubsNotInTower,std::vector<bool> &stubsInOverlapping);
+    std::vector<TTRoad> RoadBuilding(bool CMSSW);
+    std::vector<TTRoad> makeRoads(edm::Event& iEvent);
     // Program options
     const ProgramOption po_;
     long long nEvents_;
