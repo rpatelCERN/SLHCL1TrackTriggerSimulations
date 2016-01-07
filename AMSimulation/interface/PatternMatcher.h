@@ -44,20 +44,20 @@ class PatternMatcher {
 
     // Main driver
     int run();
+    // Load pattern bank
+    int loadPatterns(TString bank);
+    std::vector<TTRoad> makeRoads(edm::Event& iEvent);
 
 
   private:
     // Member functions
 
-    // Load pattern bank
-    int loadPatterns(TString bank);
 
     // Do pattern recognition, write roads (patterns that fired)
     int makeRoads(TString src, TString out);
     void StubFiltering(TTStubPlusTPReader &reader, std::vector<bool>&stubsNotInTower, std::vector<bool> &stubsInOverlapping);
     void PatternMatching(TTStubPlusTPReader &reader, std::vector<bool> stubsNotInTower,std::vector<bool> &stubsInOverlapping);
     std::vector<TTRoad> RoadBuilding(bool CMSSW);
-    std::vector<TTRoad> makeRoads(edm::Event& iEvent);
     // Program options
     const ProgramOption po_;
     long long nEvents_;

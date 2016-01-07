@@ -37,6 +37,81 @@ bool sortByPt(const TTTrack2& lhs, const TTTrack2& rhs) {
 
 // _____________________________________________________________________________
 // Do track fitting
+std::vector<TTTrack2> TrackFitter::makeTracks(edm::Event& iEvent,std::vector<TTRoad>roads){
+
+    TTStubPlusTPReader reader(verbose_);
+    reader.init(iEvent);
+    std::vector<TTTrack2> tracks;
+
+for (unsigned iroad=0; iroad<roads.size(); ++iroad) {
+        if (iroad >= (unsigned) po_.maxRoads)  break;
+        std::vector<std::vector<unsigned> > stubRefs = roads[iroad].stubRefs;
+        unsigned patternRef = roads[iroad].patternRef;  
+     const std::vector<std::vector<unsigned> >& combinations = combinationFactory_.combine(stubRefs);
+    for (unsigned icomb=0; icomb<combinations.size(); ++icomb) {
+        TTRoadComb acomb;
+        acomb.roadRef    = iroad;
+        acomb.combRef    = icomb;
+        acomb.patternRef = patternRef;
+        acomb.ptSegment  = roads[iroad].patternInvPt;
+        acomb.stubRefs   = combinations.at(icomb);
+        
+        acomb.stubs_r   .clear();
+        acomb.stubs_phi .clear();
+        acomb.stubs_z   .clear();
+        acomb.stubs_bool.clear();
+        //std::cout<<"Combinations "<<combinations.at(icomb).size()<<std::endl;
+        //std::cout<<"Stub Ref Size "<<stubRefs.size()<<std::endl; 
+       for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
+                    const unsigned stubRef = acomb.stubRefs.at(istub);
+                    if (stubRef != CombinationFactory::BAD) {
+                        acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
+                        acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
+                        acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
+                        acomb.stubs_bool.push_back(true);
+                    } else {
+                        acomb.stubs_r   .push_back(0.);
+                        acomb.stubs_phi .push_back(0.);
+                        acomb.stubs_z   .push_back(0.);
+                        acomb.stubs_bool.push_back(false);
+                    }
+		   // std::cout<<"Combinations "<<combinations.at(icomb).size()
+                }
+
+                acomb.hitBits = getHitBits(acomb.stubs_bool);
+		                TTTrack2 atrack;
+                int fitstatus = fitter_->fit(acomb, atrack);
+
+                atrack.setTower     (po_.tower);
+                atrack.setRoadRef   (acomb.roadRef);
+                atrack.setCombRef   (acomb.combRef);
+                atrack.setPatternRef(acomb.patternRef);
+                atrack.setPtSegment (acomb.ptSegment);
+                atrack.setHitBits   (acomb.hitBits);
+                atrack.setStubRefs  (acomb.stubRefs);
+		
+		//if (atrack.chi2Red() < po_.maxChi2)  // reduced chi^2 = chi^2 / ndof
+                tracks.push_back(atrack);
+		
+    }
+}
+
+        std::sort(tracks.begin(), tracks.end(), sortByPt);
+        // Find ghosts
+
+        for (unsigned itrack=0; itrack<tracks.size(); ++itrack) {  // all tracks
+            for (unsigned jtrack=0; jtrack<itrack; ++jtrack) {  // only non ghost tracks
+                if (tracks.at(jtrack).isGhost())  continue;
+
+                bool isGhost = ghostBuster_.isGhostTrack(tracks.at(jtrack).stubRefs(), tracks.at(itrack).stubRefs());
+                if (isGhost) {
+                    tracks.at(itrack).setAsGhost();
+                }
+            }
+        }
+
+return tracks;
+}
 int TrackFitter::makeTracks(TString src, TString out) {
     if (verbose_)  std::cout << Info() << "Reading " << nEvents_ << " events and fitting tracks." << std::endl;
 

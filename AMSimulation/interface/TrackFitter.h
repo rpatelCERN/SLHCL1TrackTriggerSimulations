@@ -1,6 +1,7 @@
 #ifndef AMSimulation_TrackFitter_h_
 #define AMSimulation_TrackFitter_h_
 
+#include "FWCore/Framework/interface/Event.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/Helper.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/ProgramOption.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/TrackFitterAlgoPCA.h"
@@ -9,8 +10,8 @@
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/CombinationFactory.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/GhostBuster.h"
 #include "SLHCL1TrackTriggerSimulations/AMSimulation/interface/MCTruthAssociator.h"
+#include "SLHCL1TrackTriggerSimulations/AMSimulationDataFormats/interface/TTRoad.h"
 using namespace slhcl1tt;
-
 
 class TrackFitter {
 
@@ -43,12 +44,12 @@ class TrackFitter {
 
     // Main driver
     int run();
+    std::vector<TTTrack2> makeTracks(edm::Event& iEvent,std::vector<TTRoad>roads);
 
 
   private:
     // Member functions
     int makeTracks(TString src, TString out);
-
     // Program options
     const ProgramOption po_;
     long long nEvents_;
