@@ -20,8 +20,20 @@ TTStubPlusTPReader::TTStubPlusTPReader(int verbose)
   vp2_intime           (0),
   vp2_primary          (0) {}
 
-TTStubPlusTPReader::~TTStubPlusTPReader() {}
+TTStubPlusTPReader::~TTStubPlusTPReader() {
+delete vp2_pt;
+delete  vp2_eta;
+delete  vp2_phi;
+delete  vp2_vx;
+delete  vp2_vy;
+delete  vp2_vz;
+delete  vp2_charge;
+ delete vp2_pdgId;
+delete  vp2_signal;
+ delete vp2_intime;
+delete  vp2_primary;
 
+}
 int TTStubPlusTPReader::init(TString src, bool full) {
     if (BasicReader::init(src, full))
         return 1;
@@ -53,6 +65,7 @@ int TTStubPlusTPReader::init(TString src, bool full) {
 }
 
 void TTStubPlusTPReader::init(edm::Event& iEvent){
+    std::cout<<"Before Basic Init "<<std::endl;
     BasicReader::init(iEvent);
     std::cout<<"After Basic Init "<<std::endl;
     edm::Handle< std::vector<float> >trkParts_pt,trkParts_eta,trkParts_phi,trkParts_vx, trkParts_vy, trkParts_vz;

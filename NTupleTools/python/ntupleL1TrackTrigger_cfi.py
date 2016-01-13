@@ -18,8 +18,8 @@ ntuplePixelDigis = cms.EDProducer('NTuplePixelDigis',
 )
 
 ntupleTTClusters = cms.EDProducer('NTupleTTClusters',
-    inputTag = cms.InputTag('TTClustersFromPixelDigis', 'ClusterInclusive'),
-    inputTagMC = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterInclusive'),
+    inputTag = cms.InputTag('TTStubsFromPixelDigis', 'ClusterAccepted'),
+    inputTagMC = cms.InputTag('TTClusterAssociatorFromPixelDigis', 'ClusterAccepted'),
     inputTagDigi = ntuplePixelDigis.inputTag,
     inputTagTP = ntuplePixelDigis.inputTagTP,
     prefix = cms.string('TTClusters@'),

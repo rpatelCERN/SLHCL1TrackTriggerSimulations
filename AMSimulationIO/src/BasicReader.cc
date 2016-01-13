@@ -29,10 +29,61 @@ BasicReader::BasicReader(int verbose)
   vb_modId            (0),
   vb_tpId             (0),
   //
-  verbose_(verbose) {}
+  verbose_(verbose) {
+  vp_pt=new std::vector<float>();
+  vp_eta=new std::vector<float>();
+  vp_phi=new std::vector<float>();
+  vp_vx=new std::vector<float>();
+  vp_vy=new std::vector<float>();
+  vp_vz=new std::vector<float>();
+  vp_charge=new std::vector<int>();
+
+  vb_x=new std::vector<float>();
+  vb_y=new std::vector<float>();
+  vb_z=new std::vector<float>();
+  vb_r=new std::vector<float>();
+  vb_eta=new std::vector<float>();
+  vb_phi=new std::vector<float>();
+  vb_coordx=new std::vector<float>();
+  vb_coordy=new std::vector<float>();
+  vb_trigBend=new std::vector<float>();
+  vb_roughPt=new std::vector<float>();
+  vb_clusWidth0=new std::vector<float>();
+  vb_clusWidth1=new std::vector<float>();
+  vb_modId=new std::vector<unsigned>();
+  vb_tpId=new std::vector<int>();
+}
+
+
 
 BasicReader::~BasicReader() {
     if (tchain)  delete tchain;
+
+  //
+  delete vp_pt;
+  //
+  delete vp_eta;
+  delete  vp_phi;
+  delete  vp_vx;
+  delete  vp_vy;
+  delete  vp_vz;
+  delete  vp_charge;
+  delete  vb_x;
+  delete  vb_y;
+  delete  vb_z;
+       delete  vb_r;
+       delete  vb_eta;
+       delete  vb_phi;
+       delete  vb_coordx;;
+       delete  vb_coordy;
+       delete  vb_trigBend;
+       delete  vb_roughPt;
+       delete  vb_clusWidth0;
+       delete  vb_clusWidth1;
+       delete  vb_modId;
+       delete  vb_tpId;
+  
+  //     }
 }
 
 int BasicReader::init(TString src, bool full) {
@@ -170,6 +221,7 @@ void  BasicReader::init(edm::Event& iEvent){
     edm::Handle< std::vector<float> > TTStubs_x,TTStubs_y,TTStubs_z,TTStubs_r, TTStubs_eta, TTStubs_phi,TTStubs_coordx, TTStubs_coordy, TTStubs_trigBend, TTStubs_roughPt;
     edm::Handle< std::vector<unsigned> >TTStubs_clusWidth0, TTStubs_clusWidth1,TTStubs_modId;
     edm::Handle< std::vector<int> >TTStubs_tpId ;
+    std::cout<<" Before Get By Label "<<std::endl;
     iEvent.getByLabel("ntupleGenParticles","genParts@pt", genParts_pt);
     iEvent.getByLabel("ntupleGenParticles","genParts@eta", genParts_eta);
     iEvent.getByLabel("ntupleGenParticles","genParts@phi", genParts_phi);
@@ -194,8 +246,10 @@ void  BasicReader::init(edm::Event& iEvent){
     iEvent.getByLabel("ntupleTTStubs","TTStubs@modId", TTStubs_modId);
     
     iEvent.getByLabel("ntupleTTStubs","TTStubs@tpId", TTStubs_tpId);
- 
+     std::cout<<"Labels Got "<<genParts_pt->size()<<std::endl;
+
    for(unsigned int g=0; g<genParts_pt->size();++g){
+	std::cout<<"Filling g "<<g<<std::endl;
         vp_pt->push_back(genParts_pt->at(g));
         vp_eta->push_back(genParts_eta->at(g));
         vp_phi->push_back(genParts_phi->at(g));
@@ -205,7 +259,7 @@ void  BasicReader::init(edm::Event& iEvent){
         vp_charge->push_back(genParts_charge->at(g));
         
     }
-
+    std::cout<<"Gen Particles Filled "<<std::endl;
     for(unsigned int s=0; s<TTStubs_eta->size();++s){
         vb_x->push_back(TTStubs_x->at(s));
         vb_y->push_back(TTStubs_y->at(s));
