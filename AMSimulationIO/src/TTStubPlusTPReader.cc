@@ -18,7 +18,10 @@ TTStubPlusTPReader::TTStubPlusTPReader(int verbose)
   vp2_pdgId            (0),
   vp2_signal           (0),
   vp2_intime           (0),
-  vp2_primary          (0) {}
+  vp2_primary          (0) {
+
+
+}
 
 TTStubPlusTPReader::~TTStubPlusTPReader() {
 delete vp2_pt;
@@ -87,6 +90,8 @@ void TTStubPlusTPReader::init(edm::Event& iEvent){
     iEvent.getByLabel("ntupleTrackingParticles","trkParts@signal", trkParts_signal);
     iEvent.getByLabel("ntupleTrackingParticles","trkParts@intime", trkParts_intime);
     iEvent.getByLabel("ntupleTrackingParticles","trkParts@primary", trkParts_primary);
+  //std::cout<<"Did Get By Label "<<std::endl;
+    //fill vectors:
     
   vp2_pt=new std::vector<float>();
   vp2_eta=new std::vector<float>();
@@ -99,8 +104,7 @@ void TTStubPlusTPReader::init(edm::Event& iEvent){
   vp2_signal=new std::vector<bool>();
   vp2_intime=new std::vector<bool>();
   vp2_primary=new std::vector<bool>();
-  //std::cout<<"Did Get By Label "<<std::endl;
-    //fill vectors:
+
 if(trkParts_pt.isValid()){
     for(unsigned int i=0; i<trkParts_pt->size(); ++i){
         vp2_pt->push_back(trkParts_pt->at(i));

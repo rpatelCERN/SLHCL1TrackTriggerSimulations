@@ -38,7 +38,7 @@ bool sortByPt(const TTTrack2& lhs, const TTTrack2& rhs) {
 // _____________________________________________________________________________
 // Do track fitting
 std::vector<TTTrack2> TrackFitter::makeTracks(edm::Event& iEvent,std::vector<TTRoad>roads){
-
+///need new stubs here
     TTStubPlusTPReader reader(verbose_);
     reader.init(iEvent);
     std::vector<TTTrack2> tracks;
@@ -60,11 +60,12 @@ for (unsigned iroad=0; iroad<roads.size(); ++iroad) {
         acomb.stubs_phi .clear();
         acomb.stubs_z   .clear();
         acomb.stubs_bool.clear();
-        //std::cout<<"Combinations "<<combinations.at(icomb).size()<<std::endl;
-        //std::cout<<"Stub Ref Size "<<stubRefs.size()<<std::endl; 
+        std::cout<<"Combinations "<<combinations.at(icomb).size()<<std::endl;
+        std::cout<<"Stub Ref Size "<<stubRefs.size()<<std::endl; 
        for (unsigned istub=0; istub<acomb.stubRefs.size(); ++istub) {
                     const unsigned stubRef = acomb.stubRefs.at(istub);
                     if (stubRef != CombinationFactory::BAD) {
+			std::cout<<"Stub Ref Size "<<stubRef<<std::endl;
                         acomb.stubs_r   .push_back(reader.vb_r   ->at(stubRef));
                         acomb.stubs_phi .push_back(reader.vb_phi ->at(stubRef));
                         acomb.stubs_z   .push_back(reader.vb_z   ->at(stubRef));
@@ -109,7 +110,7 @@ for (unsigned iroad=0; iroad<roads.size(); ++iroad) {
                 }
             }
         }
-
+std::cout<<"End of Fitting Function "<<std::endl;
 return tracks;
 }
 int TrackFitter::makeTracks(TString src, TString out) {

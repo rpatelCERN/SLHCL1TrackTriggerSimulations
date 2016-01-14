@@ -14,7 +14,7 @@ class TrackFitterAlgoLTF : public TrackFitterAlgoBase {
    public:
   TrackFitterAlgoLTF(const slhcl1tt::ProgramOption& po) :
     TrackFitterAlgoBase(),
-    linearizedTrackFitter_(std::make_shared<LinearizedTrackFitter>("LinearizedTrackFit/LinearizedTrackFit/python/ConstantsProduction/", true, true)),
+    linearizedTrackFitter_(std::make_shared<LinearizedTrackFitter>("/fdata/hepx/store/user/rish/AMSIMULATION/Forked/CMSSW_6_2_0_SLHC25_patch3/src/LinearizedTrackFit/LinearizedTrackFit/python/ConstantsProduction/", true, true)),
     verbose_(po.verbose)
   {}
 

@@ -57,7 +57,8 @@ BasicReader::BasicReader(int verbose)
 
 
 BasicReader::~BasicReader() {
-    if (tchain)  delete tchain;
+ //   if (tchain)  delete tchain;
+
 
   //
   delete vp_pt;
@@ -246,7 +247,8 @@ void  BasicReader::init(edm::Event& iEvent){
     iEvent.getByLabel("ntupleTTStubs","TTStubs@modId", TTStubs_modId);
     
     iEvent.getByLabel("ntupleTTStubs","TTStubs@tpId", TTStubs_tpId);
-     std::cout<<"Labels Got "<<genParts_pt->size()<<std::endl;
+
+  //   std::cout<<"Labels Got "<<genParts_pt->size()<<std::endl;
 
    for(unsigned int g=0; g<genParts_pt->size();++g){
 	std::cout<<"Filling g "<<g<<std::endl;
